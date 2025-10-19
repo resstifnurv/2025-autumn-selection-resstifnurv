@@ -1,0 +1,6 @@
+.cache
+build
+install
+log
+resources/output
+compile.sh
