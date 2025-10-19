@@ -1,0 +1,4 @@
+target_path: "resources/output/output.avi"
+fps: 30
+width: 1280
+height: 1024

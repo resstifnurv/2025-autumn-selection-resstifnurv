@@ -11,6 +11,12 @@ camera_config = os.path.join(
     'camera.yml'
 )
 
+manager_config = os.path.join(
+    get_package_share_directory('img_manager'),
+    'config',
+    'manager.yml'
+)
+
 def generate_launch_description():
 
     container = ComposableNodeContainer(
@@ -29,6 +35,7 @@ def generate_launch_description():
                 package = 'img_manager',
                 plugin = 'ManagerNode',
                 name = 'img_manager',
+                parameters = [manager_config]
             )
         ],
         output = 'screen'

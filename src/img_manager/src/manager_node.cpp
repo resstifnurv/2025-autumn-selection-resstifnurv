@@ -5,18 +5,6 @@ cv::Mat ManagerNode::mark_light_strip(cv::Mat image){
     return image;
 }
 
-void ManagerNode::init_writer(std::string target_path){
-    this->export_writer.open(
-        target_path,
-        cv::VideoWriter::fourcc('X', 'V', 'I', 'D'),
-        30,
-        cv::Size(1280, 1024)
-    );
-    if (!export_writer.isOpened()) {
-        std::cerr << "Error: Could not open the VideoWriter!" << std::endl;
-    }
-}
-
 void ManagerNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
     try {
         cv_bridge::CvImagePtr img_ptr = cv_bridge::toCvCopy(
@@ -25,7 +13,7 @@ void ManagerNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
         );
         auto img = img_ptr->image;
         auto img_marked = mark_light_strip(img);
-        this->export_writer.write(img_marked);
+        this->writer->write(img_marked);
         // cv::waitKey(10);
     }
     catch(cv_bridge::Exception &e) {
@@ -40,15 +28,17 @@ void ManagerNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
 ManagerNode::ManagerNode(const rclcpp::NodeOptions &options)
 : rclcpp::Node("manager_node", options){
     RCLCPP_INFO(this->get_logger(), "节点已启动：%s", this->get_name());
-    this->init_writer("resources/output/output.avi");
+    
+    this->target_path = this->declare_parameter("target_path", "video.mp4");
+    this->fps = this->declare_parameter("fps", 30);
+    this->width = this->declare_parameter("width", 1280);
+    this->height = this->declare_parameter("height", 1024);
+    this->writer = std::make_shared<VirtualWriter>(target_path, fps, cv::Size(width, height));
+
     image_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
         "/image_raw", 10,
         [this](sensor_msgs::msg::Image::SharedPtr msg) { this->image_callback(msg); }
     );
-}
-
-ManagerNode::~ManagerNode(){
-    this->export_writer.release();
 }
 
 #include <rclcpp_components/register_node_macro.hpp>
