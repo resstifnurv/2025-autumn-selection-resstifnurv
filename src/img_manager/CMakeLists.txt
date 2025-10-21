@@ -15,6 +15,7 @@ ament_auto_find_build_dependencies()
 ament_auto_add_library(img_manager SHARED
     src/manager_node.cpp
     src/VirtualWriter.cpp
+    src/ImgProcUtil.cpp
 )
 
 if(BUILD_TESTING)

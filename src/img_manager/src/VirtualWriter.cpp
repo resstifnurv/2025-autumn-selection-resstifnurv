@@ -3,9 +3,9 @@
 #include <opencv2/videoio.hpp>
 #include <signal.h>
 
-std::map<std::string, int> VirtualWriter::FOURCC = {
+const std::unordered_map<std::string, int> VirtualWriter::FOURCC = {
     {"avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D')},
-    {"mp4", cv::VideoWriter::fourcc('a', 'v', 'c', '1')},
+    {"mp4", cv::VideoWriter::fourcc('m', 'p', '4', 'v')},
     {"mkv", cv::VideoWriter::fourcc('X', '2', '6', '4')}
 };
 
@@ -18,7 +18,7 @@ VirtualWriter::VirtualWriter(std::string target_path, int fps, cv::Size frame_si
     );
     int fourcc = DEFAULT_FOURCC;
     if(FOURCC.find(end_with) != FOURCC.end()){
-        fourcc = FOURCC[end_with];
+        fourcc = FOURCC.at(end_with);
     }
 
     try{

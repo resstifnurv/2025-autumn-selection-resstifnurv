@@ -1,4 +1,4 @@
-#include <map>
+#include <unordered_map>
 #include <opencv2/opencv.hpp>
 
 class VirtualWriter{
@@ -8,7 +8,7 @@ public:
     void write(const cv::Mat& image);
 
 private:
-    static std::map<std::string, int> FOURCC;
+    static const std::unordered_map<std::string, int> FOURCC;
     static const int DEFAULT_FOURCC;
     std::string target_path;
     int fps;

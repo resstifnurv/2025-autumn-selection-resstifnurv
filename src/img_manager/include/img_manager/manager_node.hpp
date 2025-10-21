@@ -2,6 +2,7 @@
 #include "sensor_msgs/msg/image.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "VirtualWriter.hpp"
+#include "ImgProcUtil.hpp"
 #include <exception>
 #include <opencv2/opencv.hpp>
 #include <rclcpp/node_options.hpp>
@@ -18,8 +19,8 @@ private:
     int fps;
     int width, height;
     std::shared_ptr<VirtualWriter> writer;
+    std::string arg;
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription_;
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);
-    static cv::Mat mark_light_strip(cv::Mat image);
 };
