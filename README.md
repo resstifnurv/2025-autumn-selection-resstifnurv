@@ -1,3 +1,42 @@
+
+# 写在前面的话
+
+我自己把项目代码全部自己重写了一遍，然后照猫画虎地在 `img_manager` 包下添加了两个组件 `VirtualWriter` 和 `ImgProcUtil` 以及 `include` 和 `config` 目录。
+
+
+> 小吐槽：Lucy 发给我们的虚拟机环境有问题，排查了半天以为是自己代码的问题结果重装 Ubuntu 自己配环境之后就好了 :）
+
+---
+
+# 使用方法：
+
+和学长的项目一样，运行这三行命令即可：
+
+```bash
+colcon build
+source install/setup.bash
+ros2 launch img_manager manager.launch.py
+```
+
+修改两个包下的 `config/*.xml` 以实现不同功能。
+
+### `manager.xml`
+
+1. `export_mode`: 可以设置为 `"play"` 或 `"write"`，分别表示直接在窗口中播放和导出为视频文件。
+
+2. `arg`: 对获取到的图像的处理方式，设置为 `"ALL"` 时实现作业要求的完整功能。其余可以设置的值可参阅 `src/ImgProcUtil.cpp`。
+
+3. `target_path`, `fps`, `width`, `height`: 对应导出视频的路径，帧数，图像尺寸。
+
+
+### `camera.xml`
+
+1. `source_path`: 要操作的视频文件。
+
+2. `fps`: 帧率，决定了 `CameraNode` 广播图像消息的频率。
+
+---
+
 # 项目结构分析
 
 ## 1. `camera_node` 部分 
@@ -117,13 +156,18 @@
 
 - 成员函数：
 
-    - `private cv::Mat mark_light_strip(cv::Mat image);`
-
-        传入待处理的图像（帧），返回标记出图像中白色灯带后的图像（帧）。
-
     - `private void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);`
 
         接受 ROS 消息并转换为 `cv::Mat` 类型变量。随后调用 `mark_light_strip()` 处理图像，最后通过 `cv::imshow()` 展示。
 
----
+### 2.2 `VirtualWriter` 类
 
+作为封装的将图像写入视频的类。将 `src/img_manager/config/manager.yml` 配置文件中 `export_mode` 改为 `"write"` 即可使用。
+
+有 `target_path`, `fps`, `frame_size`, `writer` 等参数。意义比较明确，不再阐述。
+
+### 2.3 `ImgProcUtil` 类
+
+静态工具类（其实完全可以用命名空间但是我喜欢这样写），禁止创建实例。内置了若干种 `cv::Mat->cv::Mat` 的函数用于操作图像，有一个 `img_proc_all` 函数集成了本次作业需要实现的所有功能，将 `src/img_manager/config/manager.yml` 配置文件中 `arg` 改为 `"ALL"` 即可使用。
+
+---
