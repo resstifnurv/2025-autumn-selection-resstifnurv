@@ -3,5 +3,5 @@ build
 install
 log
 resources/output
-resources/what.avi
 compile.sh
+.vscode

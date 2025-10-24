@@ -19,7 +19,7 @@ private:
     int fps;
     int width, height;
     std::shared_ptr<VirtualWriter> writer;
-    std::string arg;
+    std::string arg, export_mode;
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription_;
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg);

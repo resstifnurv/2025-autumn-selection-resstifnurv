@@ -10,7 +10,13 @@ void ManagerNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
         auto img = img_ptr->image;
         if(!img.empty()){
             auto img_marked = ImgProcUtil::proc_img(img, this->arg);
-            this->writer->write(img_marked);
+            if(this->export_mode == "play"){
+                cv::imshow("Resstifnurv", img_marked);
+                cv::waitKey(2);
+            }
+            else if(this->export_mode == "write"){
+                this->writer->write(img_marked);
+            }
         }
         else{
             RCLCPP_WARN(this->get_logger(), "读取到空的帧，已跳过");
@@ -20,9 +26,9 @@ void ManagerNode::image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
     catch(cv_bridge::Exception &e) {
         RCLCPP_ERROR(this->get_logger(), "Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
     }
-    // catch(std::exception &e) {
-    //     RCLCPP_ERROR(this->get_logger(), "Caught Exception: %s", e.what());
-    // }
+    catch(std::exception &e) {
+        RCLCPP_ERROR(this->get_logger(), "Caught Exception: %s", e.what());
+    }
 }
 
 ManagerNode::ManagerNode(const rclcpp::NodeOptions &options)
@@ -34,6 +40,7 @@ ManagerNode::ManagerNode(const rclcpp::NodeOptions &options)
     this->width = this->declare_parameter("width", 1280);
     this->height = this->declare_parameter("height", 1024);
     this->arg = this->declare_parameter("arg", "NO_PROC");
+    this->export_mode = this->declare_parameter("export_mode", "write");
     this->writer = std::make_shared<VirtualWriter>(target_path, fps, cv::Size(width, height));
 
     image_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(

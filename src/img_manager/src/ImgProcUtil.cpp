@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 const std::unordered_map<std::string, std::function<cv::Mat(cv::Mat)> > ImgProcUtil::ARGS_TO_OP = {
-    {"TEST",                &ImgProcUtil::proc_test},
+    {"ALL",                &ImgProcUtil::proc_all},
 
     {"CONVERT_BGR2HSV",     &ImgProcUtil::proc_convert_bgr2hsv},
     {"CONVERT_HSV2BGR",     &ImgProcUtil::proc_convert_hsv2bgr},
@@ -26,8 +26,10 @@ const std::unordered_map<std::string, std::function<cv::Mat(cv::Mat)> > ImgProcU
     {"EDGE_SOBEL",          &ImgProcUtil::proc_edge_sobel},
     {"EDGE_SCHARR",         &ImgProcUtil::proc_edge_scharr},
     {"EDGE_LAPLACIAN",      &ImgProcUtil::proc_edge_laplacian},
-    {"EDGE_CANNY",          &ImgProcUtil::proc_edge_canny},
+    {"EDGE_CANNY",          &ImgProcUtil::proc_edge_canny}
 };
+
+const cv::Scalar ImgProcUtil::default_color = cv::Scalar(40, 220, 80); // BGR
 
 cv::Mat ImgProcUtil::proc_img(cv::Mat img, std::string arg){
     cv::Mat proc_img;
@@ -45,16 +47,18 @@ cv::Mat ImgProcUtil::proc_img(cv::Mat img, std::string arg){
     return proc_img;
 }
 
-cv::Mat ImgProcUtil::proc_test(cv::Mat img){
+cv::Mat ImgProcUtil::proc_all(cv::Mat img){
     cv::Mat original_img = img.clone();
     cv::Mat hsv_img = proc_convert_bgr2hsv(img);
-    hsv_img = proc_denoising_bilateral_fliter(hsv_img);
-    cv::Mat mask = proc_mask_blue(hsv_img);
-    cv::Mat result_img;
-    cv::bitwise_and(original_img, original_img, result_img, mask);
-    // cv::Mat result_gray = proc_convert_bgr2gray(result_img);
-    // mask = proc_edge_canny(result_gray);
-    // cv::bitwise_and(original_img, original_img, result_img, mask);
+    cv::Mat hsv_cleaned = proc_denoising_bilateral_fliter(hsv_img);
+    cv::Mat mask_blue = proc_mask_blue(hsv_cleaned);
+    cv::Mat mask_blue_cleaned = proc_morph_open(mask_blue);
+    cv::Mat result_blue;
+    cv::bitwise_and(original_img, original_img, result_blue, mask_blue_cleaned);
+    cv::Mat result_gray = proc_convert_bgr2gray(result_blue);
+    cv::Mat mask_edge = proc_edge_canny(result_gray);
+    cv::Mat mask_edge_cleaned = proc_morph_close(mask_edge);
+    cv::Mat result_img = proc_contour_rect(mask_edge_cleaned, original_img);
     return result_img;
 }
 
@@ -170,6 +174,35 @@ cv::Mat ImgProcUtil::proc_edge_laplacian(cv::Mat img){
 
 cv::Mat ImgProcUtil::proc_edge_canny(cv::Mat img){
     cv::Mat grad;
-    cv::Canny(img, grad, 60, 140);
+    cv::Canny(img, grad, 160, 170);
     return grad;
+}
+
+cv::Mat ImgProcUtil::proc_contour_rect(cv::Mat ctr, cv::Mat dst){
+    Contour contours; Hierarchy hierarchy;
+    cv::findContours(ctr, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+    for(auto elem: contours){
+        auto rect = cv::boundingRect(elem);
+        cv::rectangle(dst, rect, default_color, 2);
+    }
+    return dst;
+}
+
+cv::Mat ImgProcUtil::proc_contour_area(cv::Mat ctr, cv::Mat dst){
+    Contour contours; Hierarchy hierarchy;
+    cv::findContours(ctr, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+    for(auto elem: contours){
+        auto rect = cv::minAreaRect(elem);
+        dst = draw_rotated_rect(dst, rect);
+    }
+    return dst;
+}
+
+cv::Mat ImgProcUtil::draw_rotated_rect(cv::Mat img, cv::RotatedRect rect){
+    cv::Point2f points[4];
+    rect.points(points);
+    for(int i = 0; i < 3; i++){
+        cv::line(img, points[i], points[i + 1], default_color, 2);
+    }
+    return img;
 }

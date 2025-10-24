@@ -1,3 +1,5 @@
+#pragma once
+
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <functional>
@@ -12,8 +14,9 @@ private:
     ~ImgProcUtil() = delete;
     ImgProcUtil& operator=(const ImgProcUtil&) = delete;
     static const std::unordered_map<std::string, std::function<cv::Mat(cv::Mat)> > ARGS_TO_OP;
+    static const cv::Scalar default_color;
 
-    static cv::Mat proc_test(cv::Mat img);                          // arg = "TEST"
+    static cv::Mat proc_all(cv::Mat img);                          // arg = "ALL"
 
     static cv::Mat proc_convert_bgr2hsv(cv::Mat img);               // arg = "CONVERT_BGR2HSV"
     static cv::Mat proc_convert_hsv2bgr(cv::Mat img);               // arg = "CONVERT_HSV2BGR"
@@ -36,6 +39,13 @@ private:
     static cv::Mat proc_edge_laplacian(cv::Mat img);                // arg = "EDGE_LAPLACIAN"
     static cv::Mat proc_edge_canny(cv::Mat img);                    // arg = "EDGE_CANNY"
 
+    static cv::Mat proc_contour_rect(cv::Mat ctr, cv::Mat dst);     
+    static cv::Mat proc_contour_area(cv::Mat ctr, cv::Mat dst);     
+    static cv::Mat draw_rotated_rect(cv::Mat img, cv::RotatedRect rect);
+
 public:
     static cv::Mat proc_img(cv::Mat img, std::string arg);
 };
+
+using Contour = std::vector<std::vector<cv::Point> >;
+using Hierarchy = std::vector<cv::Vec4i>;
